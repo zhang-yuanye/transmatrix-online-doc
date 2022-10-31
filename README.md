@@ -1,13 +1,13 @@
-# 数据api文档
-### 代码所需要导入的库
-    from IPython.core.interactiveshell import InteractiveShell 
-    InteractiveShell.ast_node_interactivity = "all"
-    from datetime import datetime, date, timedelta
-    import pandas as pd
-    import numpy as np
+# Transmatrix 使用手册
 
-### 数据库与数据结构
-#### Dataset
+更新日期： 2022年10月30日
+
+
+推荐使用在线版本： https://zhang-yuanye.github.io/transmatrix-online-doc/#/
+
+## 数据api
+
+### Dataset 
 >用于描述一个数据集合
 - 参数:
     >名称|类型|说明
@@ -17,12 +17,12 @@
      codes|list（指定集合） / '*'（取表中所有代码） / None(defualt, 取表中所有代码)|股票代码集合
      fields|list（指定集合） / '*'（取表中所有字段） / None(defualt, 取表中所有字段)|字段集合
      panel_catagory|'price-volume' / 'finance-report', defalut|区分是否是财报数据
-  - methods:
-      - load_data 加载数据
-- 样例
+- 函数接口:
+  - load_data  #加载数据
+  
+  代码样例:
 
 
-    In：
     from transmatrix.data_api import Dataset
 
     dataset = Dataset(
@@ -31,20 +31,17 @@
         codes = ['000001.SZSE','000002.SZSE'],
         fields = ['open','high','low','close','volume'],
         end_time = '20210120',
-    ).load_data()
+    )  # 构建数据集
 
-    type(dataset)
+    dataset.load_data() #加载数据
+    type(dataset.data)  #加载后数据以Array3dPanel的形式保存在.data属性中
+---
     Out:
+    transmatrix.data_api.panel_engine.panel_database.Array3dPanel
 
-
-
-
-
----
----
-#### Array3dPanel
+### Array3dPanel 
  > 数据集合对象
- - properties:
+ - 属性列表:
     >名称|说明
     >---|---
      data | ndarray 数据
@@ -52,7 +49,8 @@
      fields | 字段集合
      codes  | 代码集合
      cursor | 当前游标位置 <br>初始化为-1，由回测引擎控制。 <br> 给定回测引擎时间T，游标为idx中T时刻之前最新一条数据对应的序号。
- - 样例
+
+  代码样例:
 
 
     In：
@@ -63,6 +61,7 @@
     dataset.codes
     dataset.cursor
 
+---
     Out:
     numpy.ndarray
     (12, 5, 2)
@@ -85,7 +84,7 @@
 
     -1
 
-
+---
 --- 
 - 构造方法:
     - 1. 利用 Dataset.load_data （见上文）
@@ -93,7 +92,7 @@
         - 类方法
         - 通过形为 {name : pd.Dataframe} 的字典实例化数据集合
 
-- 样例
+  代码样例
 
 
     In:
@@ -111,7 +110,7 @@
     panel3d.idx
     panel3d.fields
     panel3d.codes
-
+---
     Out:
     (5, 2, 2)
 
@@ -126,15 +125,17 @@
     {'000001.SZSE': 0, '000002.SZSE': 1}
 
 ---
-- methods: 转化为字典
-    - to_dataframes
+---
 
-- 样例
+  - to_dataframes
+    - 将数据转化为形如 {name : pd.Dataframe} 的字典实例化数据集合
+
+  代码样例
 
 
     In：
     panel3d.to_dataframes()
-
+---
     Out:
     {'A':                      000001.SZSE  000002.SZSE
     2021-01-01 09:30:00            1            1
@@ -150,10 +151,11 @@
     2021-01-05 09:30:00            2            2}
 ---
 
-- concate: 向数据中加入新的字段 (同频拼接)
-    - 参数: other(dataframe)
+  - concate:  
+    - 功能：向数据中加入新的字段 (同频拼接)
+    - 参数：other(dataframe)
 
-- 样例
+  代码样例
 
 
     In:
@@ -169,7 +171,7 @@
     panel3d.idx
     panel3d.fields
     panel3d.codes
-
+---
     Out:
     (5, 4, 2)
     {Timestamp('2021-01-01 09:30:00'): 0,
@@ -181,19 +183,20 @@
     {'000001.SZSE': 0, '000002.SZSE': 1}
 
 ---
-- calibrate: 匹配timestamps, 保留有效数据。
-    对于timestamps 中的任意一个时间戳, 匹配该时间之后的第一条数据。
-    - 参数: tiemstamps(datetime)
--样例
-  
+- calibrate: 
+  - 功能: 匹配timestamps, 保留有效数据。对于timestamps 中的任意一个时间戳, 匹配该时间之后的第一条数据。
+  - 参数: tiemstamps(datetime)
 
+
+  代码样例
+  
 
     In:
     '校准后:'
     panel3d.calibrate(clock_steps)
     panel3d.data.shape
     panel3d.to_dataframes()
-
+---
     Out:
     '校准后:'
     (5, 2, 2)
@@ -211,7 +214,8 @@
     2021-01-05 09:35:00            2            2}
 
 ---
-### 数据查询接口
+
+
 - query: 通过外部时间查询最新数据
   - 参数: 
     >名称|类型|说明
@@ -221,14 +225,15 @@
      start_time |datetime | 返回某时刻之后的数据
      window |timedelta | 返回一段时间的数据
     
-  - 输出: 形如 {filed_name : dataframe}的字典
+  - 返回: 
+    - 形如 {filed_name : dataframe}的字典
 
--样例
+  代码样例
 
 
-    In:
+    In: 
     panel3d.query(datetime(2021,1,4,9,36), periods = 3)
-
+---
     Out:
     {'twap':                      000001.SZSE  000002.SZSE
     2021-01-02 09:35:00            1            1
@@ -238,10 +243,10 @@
     2021-01-02 09:35:00            2            2
     2021-01-03 09:35:00            2            2
     2021-01-04 09:35:00            2            2}
-    
+---
     In:
     panel3d.query(datetime(2021,1,4,9,36), start_time = datetime(2021,1,3,9,30))
-
+---
     Out:
     {'twap':                      000001.SZSE  000002.SZSE
     2021-01-03 09:35:00            1            1
@@ -249,10 +254,10 @@
     'vwap':                      000001.SZSE  000002.SZSE
     2021-01-03 09:35:00            2            2
     2021-01-04 09:35:00            2            2}
-
+---
     In:
     panel3d.query(datetime(2021,1,4,9,36), window = timedelta(days=2))
-
+---
     Out:
     {'twap':                      000001.SZSE  000002.SZSE
     2021-01-03 09:35:00            1            1
@@ -278,7 +283,7 @@
     panel3d.cursor = 3
     panel3d.get(field = 'twap')
     panel3d.get(field = 'twap', codes = '000001.SZSE')
-
+---
     Out:
     array([1, 1])
 
@@ -292,13 +297,13 @@
      fileds|[string]
      codes |[string] /string /* / None
 
-- 样例
+代码样例
 
 
     In:
     twap, vwap = panel3d.get_fields(['twap','vwap'])
     twap, vwap
-
+---
     Out:
     (array([1, 1]), array([2, 2]))
 
@@ -311,7 +316,7 @@
      filed |string| 字段名
      codes |[string]/ string/ * / None | 代码列表
 
-- 样例
+  代码样例
 
 
     In:
@@ -319,6 +324,7 @@
     vwap = panel3d.get_window(3,'vwap')
     {'twap': twap,
     'vwap': vwap}
+---    
     Out:
     {'twap': array([[1, 1],
     [1, 1],
@@ -327,241 +333,339 @@
     [2, 2],
     [2, 2]])} 
 
+### FinancePanelData (财报数据接口)
 
+- 财报数据对象 
+  - 通过Dataset构造
+  - 底层为 multi-index dataframe
 
-### 因子数据接口
+代码示例
 
+    In:
+    from transmatrix.data_api import FinancePanelData
+    codes = ['000001.SZSE','000002.SZSE','000004.SZSE','000005.SZSE','000006.SZSE']
 
-    from transmatrix.data_api import Array3dPanel
+    finpanel : FinancePanelData \
+            = Dataset(
+                table_name = 'ashare_cashflow',
+                start_time = '20190101',
+                end_time = '20210101',
+                codes = codes,
+                fields = ['net_profit','invest_loss'],
+                #指定返回财报数据结构
+                panel_catagory = 'finance-report' # 默认为 price-volume 即非财报（基本面）数据
+                ).load_data()
 
-    pv = strategy.pv
-    pv : Array3dPanel  # [时间，字段，股票代码]
-
-    f'fields: {pv.fields}' # 通过 fields 属性查看 数据中包含的字段
-
-    # 转为df字典:
-    dfs = pv.to_dataframes()
-    dfs.keys()
-
-    # 通过字段名访问相应的因子
-    dfs['close'].head()
-
-    #每个dataframe的行列索引一致：行为时间， 列为股票代码
-    assert all(dfs['close'].index == dfs['open'].index)
-    assert all(dfs['close'].columns == dfs['open'].columns)
-
+    type(finpanel)
+---
     Out:
-    "fields: {'high': 0, 'close': 1, 'low': 2, 'open': 3, 'volume': 4, 'reverse': 5}"
-    dict_keys(['high', 'close', 'low', 'open', 'volume', 'reverse'])
-    DataFrame 暂略
-* concat方法
+    transmatrix.data_api.panel_engine.panel_database.FinancePanelData
+
+- 属性列表:
+    - data   : 全量数据（multi-index dataframe)
+    - period_group_data : 按财报期对齐后的数据 multi-index dataframe)
+![](finpanel.png) 
 
 
-    from transmatrix.data_api import Array3dPanel
+## 策略回测引擎
+### Matrix 回测控制组件
+- 配置回测信息
 
-    pv = strategy.pv.copy()
-    # 模拟插入2个字段场景
-    new1 = pd.DataFrame(
-       np.random.randn(*pv.shape), 
-       index = pv.pdidx, columns = pv.codes
+代码示例
+
+
+    from transmatrix import SimMatrix, Scheduler
+    from transmatrix.trader import BaseStrategy, StrategyConfig
+    from transmatrix.utils.tools import get_universe
+
+    # 获取可交易的股票池
+    CODES = get_universe('project_simulation/custom_universe')
+    config = SimMatrix.MatrixConfig(
+        
+        {   
+            # 回测模式 ：模拟市场 / 信号交易
+            'mode' : 'simulation', # signal
+
+            # 回测区间 ：[开始时间， 结束时间]
+            'backtest_span': ['2021-01-01','2021-12-31'],
+
+            # 因子订阅 ： [因子名 ：[因子表名，股票代码列表，字段集合，初始化窗口（天）]]
+            'factors' : {
+                'macd' : ['factor_data__stock_cn__tech__1day__macd', CODES, 'value', 10]
+            },
+
+            # 账户参数 
+            'ini_cash' : 1000000
+            # 'market_type': 'stock_cn'
+            # 'ini_positon' : {}
+            # 'fee' : 0
+        }
     )
-    new2 = pd.DataFrame(
-        np.random.randn(*pv.shape),
-        index = pv.pdidx, columns = pv.codes
-    )
 
-    f'转化前: {pv.fields}'
-    pv.concat(
-        Array3dPanel.from_dataframes(
-                {
-                    'new1':new1,
-                    'new2':new2,
-                }
-        )
-    )
-    f'转化后: {pv.fields}'
-
-    Out:
-    "转化前: {'high': 0, 'close': 1, 'low': 2, 'open': 3, 'volume': 4, 'reverse': 5}"
-    "转化后: {'high': 0, 'close': 1, 'low': 2, 'open': 3, 'volume': 4, 'reverse': 5, 'new1': 6, 'new2': 7}"
+    # 实例化回测控制器对象
+    matrix = SimMatrix.BaseMatrix(config)
 
 
-### 行情查询接口
-* 1.查询一条数据
-  * 1.1 返回所有股票的close值 
-  >pv.get('close‘)
+### Strategy 策略管理组件
 
-  * 样例
-
-
-    In:
-    close_slice = pv.get('close') 
-    close_slice; close_slice.shape
-
-    Out:
-    array([16.82, 19.12, 19.6 , ..., 16.4 ,  6.66,  5.46])
-    (3474,)
-
-
-  * 1.2 返回某只股票的close值
-    >pv.get('close', code)
-  * 样例
-
-
-    In:
-    close_slice = pv.get('close','000001.SZSE') 
-    close_slice
-
-    Out:
-    16.82
-
-
-  * 1.3 返回部多只票的close值
-    >pv.get('close', list(codes))
-
-  * 样例
-
-
-    In:
-    close_slice = pv.get('close',['000001.SZSE','000002.SZSE']) 
-    close_slice
-
-    Out:
-    array([16.82, 19.12])
-
-  * 1.4 返回全部股票的多个字段
-    >pv.get_fields(['close','open'])
-    
-  * 样例
-
-
-    In:
-    close_slice, open_slice = pv.get_fields(['close','open']) 
-    f'close : {close_slice}, shape = {close_slice.shape}'
-    f'open  : {open_slice},  shape = {open_slice.shape}'
-
-    Out:
-    'close : [16.82 19.12 19.6  ... 16.4   6.66  5.46], shape = (3474,)'
-    'open  : [16.76 19.35 19.38 ... 16.32  6.44  5.23],  shape = (3474,)'
-
-
-  * 1.5 返回单只股票的多个字段
-    >pv.get_fields(['close','open'], code)
   
-  * 样例
+代码示例
 
+
+    继承模板类
+    class Strategy(BaseStrategy)
+---
+    # 在Strategy类下实现回调函数：
+    # 行情更新时回调
+    def on_market_data_update(self, market):
+
+        data = market.data
+        macd = self.macd.query(self.time, 3)['value'][self.codes].mean().sort_values()
+        
+        buy_codes = macd.iloc[:2].index
+
+        for code in buy_codes:
+            # 获取某只股票的仓位
+            pos = self.account.get_netpos(code)
+
+            if  pos < self.max_pos:
+                price = data.get('close', code)
+                self.buy(price, 100, 'open', code, market.name)
+---
+    # 用户自定义回调 支持 定时、定频、条件触发等机制
+    callback_per_50min = Scheduler.FixFreqScheduler(name ='fixTimeScheduler50min',freq = '50min', matrix = matrix) 
+    callback_at_10and14 = Scheduler.FixTimeScheduler(name = 'fixfreq10_14',matrix = matrix, milestones= ['10:01:00','13:59:00'])
+
+--- 
+    # 编写定时定频回调逻辑
+    # 回调执行逻辑：每50分钟
+    def callback50min(self):
+        #打印回测系统时间
+        print('callback50min', self.time)
+        
+    # 回调执行逻辑：每天10点和14点
+    def callback10and14(self):
+        #打印回测系统时间
+        print('callback10and14', self.time)
+
+
+--- 
+    # 配置策略参数
+
+    strategy_cfg = StrategyConfig(
+    {   
+        # 策略名称
+        'name': 'strategy0',
+
+        # 订阅行情（用于on_market_data_update回调）
+        'subscribe_info':[
+            # 行情表名，代码列表
+            ['market_data__stock_cn__bar__1day', CODES]
+        ],
+
+        'kwargs' : {
+            'max_pos': 300
+        }
+
+        # 自定义做和引擎 ：引擎编写可开放给用户(基于transmatrix.Basematcher interface)
+        # 'match_mod': 'DayMatcher' 
+
+        # 设置 发单 / 撤单延迟 （模拟 交易系统 --> 交易所 延迟)
+        # 'insert_deley' : '0ms'
+        # 'cancel_deley' : '0ms',
+        # 设置 回报延迟 （模拟 交易所 --> 交易系统 延迟)
+        # 'receive_delay': '0ms',
+    }
+)
+
+---
+
+    # 实例化策略对象，传入matrix以实现策略注册
+    strategy = Strategy(strategy_cfg, matrix)
+
+--- 
+    # 初始化回测引擎
+    matrix.init()
+
+
+--- 
+    # 运行回测
+    matrix.run()
+    # 日志输出
+
+--- 
+![](btlog.png)
+
+--- 
+    # 分析接口
+    matrix.analyze()
+
+    # 运行后在 strategy 对象的 post_trade_analysis属性中获得回测评价数据
+
+
+代码示例
 
     In:
-    close_slice, open_slice = pv.get_fields(['close','open'],'000001.SZSE')
-    f'close : {close_slice}'
-    f'open  : {open_slice}'
+    strategy.post_trade_analysis.__dict__.keys()
 
-    'close : 16.82'
-    'open  : 16.76'
-
-  * 1.6 返回多只股票的多个字段
-    >pv.get_fields(['close','open'], list(code))
-  * 样例
-
-
-    In:
-    close_slice, open_slice = pv.get_fields(['close','open'],['000001.SZSE','000002.SZSE'])
-    f'close : {close_slice}'
-    f'open  : {open_slice}'
+---
 
     Out:
-    'close : [16.82 19.12]'
-    'open  : [16.76 19.35]'
+    dict_keys(['trade_table', 'daily_position', 'daily_netvalue', 'summary_stats'])
 
+--- 
 
+    In: # 查询交易记录
+    strategy.post_trade_analysis.trade_table
+![](tradetable.png)
 
-* 2. 查询多条数据'
+    In: # 查询每日持仓
+    strategy.post_trade_analysis.daily_position
+![](dailypos.png)
 
+    In: # 查询每日净值
+    strategy.post_trade_analysis.daily_netvalue
+![](dailynav.png)
 
-    pv.cursor = 100
-
-  * 1.1 返回所有股票的close值'
-    >pv.get_window(period, 'close')
-     
-  * 样例
-
-
-    In:
-    close_array = pv.get_window(10, 'close') 
-    close_array
-    f'shape: {close_array.shape}'
-
-    Out:
-    array([[12.92, 28.02, 21.4 , ...,  8.89,  9.89,  5.72],
-        [12.85, 28.13, 21.42, ...,  8.91,  9.63,  5.82],
-        [12.44, 27.36, 20.45, ...,  8.5 ,  8.75,  5.52],
-        ...,
-        [12.35, 26.82, 21.25, ...,  7.57,  8.99,  5.45],
-        [12.37, 27.  , 23.1 , ...,  7.8 ,  9.33,  5.63],
-        [12.49, 27.62, 23.44, ...,  7.68,  9.23,  5.63]])
-    'shape: (10, 3474)'
-
-
-  * 1.2 返回某只股票的close值' 
-    >pv.get_window(period, 'close',code) 
-    
-  * 样例
-
-
-    In:
-    close_array = pv.get_window(10, 'close','000001.SZSE') 
-    close_array
-    f'shape: {close_array.shape}'
-
-    Out:
-
-
-
-  * 1.3 返回部多只票的close值' 
-    >pv.get_window(10, 'close',list(code)) 
-
-  * 样例
-
-
-    In:
-    close_array = pv.get_window(10, 'close',['000001.SZSE','000002.SZSE']) 
-    close_array
-    f'shape: {close_array.shape}'
-
-    Out:
-    array([[12.92, 28.02],
-        [12.85, 28.13],
-        [12.44, 27.36],
-        [12.38, 27.26],
-        [12.56, 27.52],
-        [12.4 , 27.36],
-        [12.29, 26.72],
-        [12.35, 26.82],
-        [12.37, 27.  ],
-        [12.49, 27.62]])
-    'shape: (10, 2)'
-
-
-
-### 财务数据接口
-
-    from transmatrix.data_api import FinancePanelData  #引入财报数据的接口
-    from datetime import datetime, timedelta
-    time = datetime(2021,11,1)
-
-* cashflow.query - 财报数据查询接口
-  >cashflow.query(time, periods/window/start_time)
-  * 样例
   
+
+
+## 因子研究引擎
+### 开发组件
+
+- 回测组件导入
+```
+from transmatrix.matrix import SignalMatrix 
+import sys; sys.path.append('project_signal')
+```
+- 用户代码导入
+```
+from signal2weights import *            # 自定义函数库
+from strategy import ReverseSignal      # 策略代码
+from evaluator import Eval              # 策略评估代码
+```
+- 因子编写组件
+  - 在项目目录下的strategy.py中编写策略
+  - ReverseSignal继承了策略模板SignalStrategy
+  
+代码示例
+```
+  from transmatrix.matrix.signal.base import SignalStrategy
+  from transmatrix.data_api import Array3dPanel
+  from scipy.stats import zscore
+
+  class ReverseSignal(SignalStrategy):
+      # 回测开始前引擎自动运行pre_transform函数已完成用户定义的矢量计算
+      def pre_transform(self):
+          if 'reverse' not in self.pv.fields:
+              pv = self.pv.to_dataframes()
+              ret = (pv['close'] / pv['close'].shift(1) - 1).fillna(0)
+              reverse = -ret.rolling(window = 5, min_periods = 5).mean().fillna(0)
+              reverse = zscore(reverse, axis = 1)
+              ap = (pv['open'] + pv['close'] + pv['high'] + pv['low']) / 4
+              self.pv.concat(Array3dPanel.from_dataframes({'reverse' : reverse}))
+
+      # 回测过程中用户根据用户自定义的clock（时间戳序列）回调 on_clock 函数已实现因子生成逻辑
+      def on_clock(self):
+        self.update_signal(self.pv.get(field = 'reverse', codes = '*'))
+```
+
+- 因子评价组件
+  - 在项目目录下的evaluator.py中编写策略
+  - Eval继承了策略模板BaseEvaluator
+
+代码示例
+
+```
+from signal2weights import *
+from transmatrix.matrix.signal.base import BaseEvaluator
+import matplotlib.pyplot as plt
+
+
+class Eval(BaseEvaluator):
     
-    In： 
-    strategy.cashflow.query(time,periods = 4)
-    strategy.cashflow.query(time,window = timedelta(days = 90 * 3))
-    strategy.cashflow.query(time,start_time = datetime(2021,3,1))
+    # 回测结束后引擎将评价组件订阅的数据与策略生成的信号进行撮合处理生成 critc_data
+    # critc函数：基于 critic_data 对象计算因子评价结果。
+    # _process_base, _process_500, _process_ind为具体计算逻辑（因空间所限未展示代码）
+    # show函数：将评价结果可视化 （因空间所限未展示代码）
 
-    Out:
-    长表格 略
+    def critic(self, critic_data):
 
+        perf = {}
+        perf.update(self._process_base(critic_data))
 
-# transmatrix-online-doc
-# transmatrix-online-doc
+        stats = perf['stats']
+        stats.update(self._process_500(critic_data))
+        stats = pd.DataFrame(pd.Series(stats, name = 'VALUE'))
+        stats.index.name = 'FIELD'
+        perf['stats'] = stats
+
+        perf.update(self._process_ind(critic_data))
+        self.perf = perf
+        return perf
+
+    
+    def show(self): 
+    ...
+
+```
+  
+
+### 参数设置
+- 回测参数
+```
+mat_config = {   
+    # 回测模式 ：模拟市场 / 信号交易
+    'mode' : 'signal', # simulation
+
+    # 回测区间 ：[开始时间， 结束时间]
+    # 'backtest_span': [str(START), str(END)],
+    'backtest_span': [START, END],
+
+    # 股票代码列表
+    'universe': CODES,
+
+    # 是否剔除结算价异常的股票
+    'check_codes' : False,
+
+    # 因子订阅 ： [因子名 ：[因子表名，股票代码列表，字段集合，初始化窗口（天）]]
+    'data': {
+        'pv'       : ['stock__bar__1day', CODES, 'open,high,low,close,volume', 10],
+        'cashflow' : ['ashare_cashflow',  CODES, 'net_profit,invest_loss',     10] 
+    },
+
+    'clock': '09:35:00', #TODO：测试日内多笔交易。
+
+    # 账户参数 
+    'ini_cash' : 1000000        
+}
+```
+- 策略参数
+```
+stra_config = {
+    'name': 'reverseSignal',
+}
+```
+- 评价参数
+```
+eval_config = {
+    'name': 'simpleAlaphaEval',
+    'data': {
+        'pv':   ['stock__bar__1day',CODES, 'open,high,low,close,volume', 10],
+        'meta': ['stock__meta', CODES, 'is_300,is_500,industry1', 10]
+    }
+}
+```
+### 执行回测
+```
+mat = SignalMatrix(mat_config)
+eval = Eval(eval_config, mat)
+strategy = ReverseSignal(stra_config, mat)
+mat.init()
+mat.run()
+```
+### 评价报告
+```
+eval.show()
+```
+![](report.jpg)# transmatrx-

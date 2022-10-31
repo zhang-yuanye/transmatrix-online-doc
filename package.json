@@ -1,0 +1,22 @@
+{
+  "name": "transmatrix-docs",
+  "version": "1.0.0",
+  "description": "from IPython.core.interactiveshell import InteractiveShell \r     InteractiveShell.ast_node_interactivity = \"all\"\r     from datetime import datetime, date, timedelta\r     import pandas as pd\r     import numpy as np",
+  "main": ".docsifytopdfrc.js",
+  "scripts": {
+    "convert": "node_modules/.bin/docsify-pdf-converter",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhang-yuanye/transmatrix-online-doc.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zhang-yuanye/transmatrix-online-doc/issues"
+  },
+  "homepage": "https://github.com/zhang-yuanye/transmatrix-online-doc#readme"
+
+}
