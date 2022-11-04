@@ -5,6 +5,95 @@
 
 推荐使用在线版本： https://zhang-yuanye.github.io/transmatrix-online-doc/#/
 
+## 数据库操作
+### Database
+> 连接数据库类
+- properties:
+  >名称|类型|说明
+  >----|----|----
+  jdbc_http_proxy|String|jdbc代理服务器url,如"localhost:9009"
+  real_conn|String|timelyre数据库url,如"jdbc:hive2://localhost:10600/"
+  db_name|String|数据库名称
+  source|String|数据表类型,如"timelyre"
+- methods:
+- show_tables 显示数据库全部表名
+- 代码样例
+```
+    In: 
+    from transmatrix.data_api import Database
+    db = Database()
+    db.show_tables()
+```
+---
+```
+    Out:
+    ['ashare_cashflow',
+    'benchmark',
+    'factor_data__stock_cn__tech__1day__macd',
+    'factor_data__stock_cn__tech__1day__macd_xxx',
+    'factor_data__stock_cn__tech__1day__macd_yyy',
+    'future_cn__bar__1min',
+    'market_data__future_cn__bar__1min',
+    'market_data__stock_cn__bar__1day',
+    'market_data__stock_cn__bar__1s',
+    'market_data__stock_cn__bar__30min',
+    'market_data__stock_cn__bar__3s',
+    'market_data__stock_cn__tick__1s',
+    'match_info__stock_cn__tick__1s',
+    'meta_data__future_cn__1day',
+    'stock__bar__1day',
+    'stock__bar__1day_new',
+    'stock__bar__1day_new2',
+    'stock__meta',
+    'stock_names',
+    'stock_names_mapper',
+    'test_insert',
+    'trade_calendar']
+```
+- show_column_info 显示数据表字段数据类型
+    - 参数:
+        >名称|类型|说明
+        >----|----|----
+        table_name|String|数据表名
+- 代码样例
+```
+    In:
+    db.show_column_info('stock__bar__1day')
+```
+---
+```
+    Out:
+    ['datetime DATETIME',
+    'open NUMERIC',
+    'high NUMERIC',
+    'low NUMERIC',
+    'close NUMERIC',
+    'volume NUMERIC',
+    'amount NUMERIC',
+    'code CHAR']
+```
+- create_table 在数据库中建表
+    - 参数:
+        >名称|类型|说明
+        >----|----|----
+        table_name|String|数据表名
+        table_type|String|数据表类型
+        column_info|Dict/String|字段信息,如{'datetime':'timestamp',<br>'high':'float','low':'float',<br>'open':'float','close':'float'}
+        timecol|String|时序列列名
+        tags|String|索引列列名
+        uniqcols|String|主键字段,联合主键写在同一字符串中用','号隔开
+- 代码样例
+```
+    In:
+    db.create_table('stock_data','timelyre',<br>column_info={'datetime':'timestamp','high':'float','low':'float','open':'float','close':'float','code':'string'},timecol='datetime',tags='code')
+```
+---
+```
+    Out:
+```
+- delete_table 删除数据表
+    - 参数:
+        table_name|Stri
 ## 数据api
 
 ### Dataset 
@@ -668,4 +757,4 @@ mat.run()
 ```
 eval.show()
 ```
-![](report.jpg)# transmatrx-
+![](report.jpg)
