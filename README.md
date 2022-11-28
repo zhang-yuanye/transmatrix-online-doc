@@ -537,7 +537,9 @@
   - 通过Dataset构造
   - 底层为 multi-index dataframe
 
-代码示例
+#### 代码示例1
+    
+查询指定时间段内的财报数据   
 
     In:
     from transmatrix.data_api import FinancePanelData
@@ -564,6 +566,63 @@
     - period_group_data : 按财报期对齐后的数据 multi-index dataframe)
 ![](finpanel.png) 
 
+#### 代码示例2
+
+查询当前截面最新可用财报数据，以及对应历史截面财报数据
+
+    In:
+
+    from transmatrix.data_api import FinancePanelData
+
+    data_engine = DataEngine()
+    data_set = Dataset(
+                table_name = 'ashare_cashflow',
+                start_time = '20220101',
+                end_time = '20221110',
+                codes = codes,
+                fields = ['net_profit','invest_loss'],
+                #指定返回财报数据结构
+                panel_catagory = 'finance-report-section',
+                lag = '8Q', # 往前取8个季度的财报
+                )
+
+    data_engine.add_data(data_set)
+    data_engine.load_data()
+
+---
+    Out:
+    transmatrix.data_api.panel_engine.panel_database.Array3dPanel
+
+数据结构
+    
+    data_set.data.fields    
+    {'net_profit_lag0Q': 0,
+    'invest_loss_lag0Q': 1,
+    'net_profit_lag1Q': 2,
+    'invest_loss_lag1Q': 3,
+    'net_profit_lag2Q': 4,
+    'invest_loss_lag2Q': 5,
+    'net_profit_lag3Q': 6,
+    'invest_loss_lag3Q': 7,
+    'net_profit_lag4Q': 8,
+    'invest_loss_lag4Q': 9,
+    'net_profit_lag5Q': 10,
+    'invest_loss_lag5Q': 11,
+    'net_profit_lag6Q': 12,
+    'invest_loss_lag6Q': 13,
+    'net_profit_lag7Q': 14,
+    'invest_loss_lag7Q': 15,
+    'net_profit_lag8Q': 16,
+    'invest_loss_lag8Q': 17}   
+
+说明
+
+    net_profit_lag0Q表示截止某一横截面，各个股票最新的net_profit。注意在该截面上，不同股票的net_profit可能来源于不同的财报。例如，2021年4月28日这一截面上，部分股票公布了21Q1财报，部分股票公布了20Q4财报，部分股票公布了20Q3财报。net_profit_lag1Q表示各个股票上一季度的net_profit。
+
+```
+data_set.data.to_dataframes()['net_profit_lag0Q']
+```
+![](finpanel_section.png) 
 
 ## 策略回测引擎
 ### Matrix 回测控制组件
@@ -863,7 +922,21 @@ mat.init()
 mat.run()
 ```
 ### 评价报告
+#### 评价模板1
+ic分析和收益分析
 ```
 eval.show()
 ```
 ![](report.jpg)
+#### 评价模板2
+考虑交易成本和整手交易限制
+```
+eval.show()
+```  
+![](report2.png)
+#### 评价模板3
+因子加权组合分析
+```
+eval.show()
+```
+![](report3.png) 
