@@ -3,51 +3,40 @@
 建议使用在线版本： https://zhang-yuanye.github.io/transmatrix-online-doc/#/
 
 ## 数据库操作
-### Database
-> 连接数据库类
+### TimelyreDatabase
+> Timelyre时序数据库链接类
 - properties:
   >名称|类型|说明
   >----|----|----
+  db_name|String|数据库名称
   jdbc_http_proxy|String|jdbc代理服务器url,如"localhost:9009"
   real_conn|String|timelyre数据库url,如"jdbc:hive2://localhost:10600/"
-  db_name|String|数据库名称
-  source|String|数据表类型,如"timelyre"
+  hdfs_ip|String|hadoop集群ip
+  hdfs_port|Integer|hadoop集群RPC端口
+  hdfs_dir|String|临时表文件hadoop集群存放路径
 - methods:
 - show_tables 显示数据库全部表名
 - 代码样例
 ```
     In: 
-    from transmatrix.data_api import Database
-    db = Database()
+    from transmatrix.data_api.timelyre.timelyre_db import TimelyreDatabase
+    db = TimelyreDatabase
     db.show_tables()
 ```
 ---
 ```
     Out:
-    ['ashare_cashflow',
-    'benchmark',
+    ['capital',
     'factor_data__stock_cn__tech__1day__macd',
-    'factor_data__stock_cn__tech__1day__macd_xxx',
-    'factor_data__stock_cn__tech__1day__macd_yyy',
-    'future_cn__bar__1min',
-    'market_data__future_cn__bar__1min',
-    'market_data__stock_cn__bar__1day',
-    'market_data__stock_cn__bar__1s',
-    'market_data__stock_cn__bar__30min',
-    'market_data__stock_cn__bar__3s',
-    'market_data__stock_cn__tick__1s',
-    'match_info__stock_cn__tick__1s',
-    'meta_data__future_cn__1day',
-    'stock__bar__1day',
-    'stock__bar__1day_new',
-    'stock__bar__1day_new2',
-    'stock__meta',
-    'stock_names',
-    'stock_names_mapper',
-    'test_insert',
+    'stock_bar_daily',
+    'stock_code',
+    'stock_data',
+    'stock_fund',
+    'stock_index',
+    'stock_meta_temp',
     'trade_calendar']
 ```
-- show_column_info 显示数据表字段数据类型
+- show_columns 显示表列名
     - 参数:
         >名称|类型|说明
         >----|----|----
@@ -55,38 +44,96 @@
 - 代码样例
 ```
     In:
-    db.show_column_info('stock__bar__1day')
+    db.show_columns('db_test')
 ```
 ---
 ```
     Out:
-    ['datetime DATETIME',
-    'open NUMERIC',
-    'high NUMERIC',
-    'low NUMERIC',
-    'close NUMERIC',
-    'volume NUMERIC',
-    'amount NUMERIC',
-    'code CHAR']
+    ['code',
+     'datetime',
+     'trade_day',
+     'open',
+     'high',
+     'low',
+     'close',
+     'volume',
+     'turnover',
+     'vwap']
+```
+- get_column_info 返回数据表字段数据类型
+    - 参数:
+        >名称|类型|说明
+        >----|----|----
+        table_name|String|数据表名
+- 代码样例
+```
+    In:
+    db.get_column_info('db_test')
+```
+---
+```
+    Out:
+    {'code': 'string',
+     'datetime': 'timestamp',
+     'trade_day': 'string',
+     'open': 'double',
+     'high': 'double',
+     'low': 'double',
+     'close': 'double',
+     'volume': 'bigint',
+     'turnover': 'double',
+     'vwap': 'double'}
 ```
 - create_table 在数据库中建表
     - 参数:
         >名称|类型|说明
         >----|----|----
         table_name|String|数据表名
-        table_type|String|数据表类型
         column_info|Dict/String|字段信息,如{'datetime':'timestamp',<br>'high':'float','low':'float',<br>'open':'float','close':'float'}
-        timecol|String|时序列列名
-        tags|String|索引列列名
+        table_type|String|数据表类型,默认为timelyre时序表,可选orc事务表,text文本表
+        timecol|String|时序列列名(创建timelyre时序表必须指定)
+        tags|String|索引列列名(创建timelyre时序表必须指定)
+        shard_group_duration|Integer|时序表聚合时间长度(创建timelyre时序表必须指定)
+        time_sharding_policy|String|时序表聚合规则,可选'weeks','months',years',不填默认使用tags
         uniqcols|String|主键字段,联合主键写在同一字符串中用','号隔开
+        bucketcolumn|String|分桶字段(创建orc事务表时必须指定)
+        bucketquantity|Integer|分桶数量(创建orc事务表时必须指定)
+        col_delimiter|String|列分割符,默认为','(创建text文本表时必须指定)
+        location|String|文本表存储路径(创建text文本表且外表时必须指定)
+        isExternal|Bool|是否是外表
 - 代码样例
 ```
     In:
-    db.create_table('stock_data','timelyre',<br>column_info={'datetime':'timestamp','high':'float','low':'float','open':'float','close':'float','code':'string'},timecol='datetime',tags='code')
-```
----
-```
-    Out:
+        #创建时序表
+        db.create_table(
+        table_name='db_test', 
+        column_info={'code':'string','datetime':'timestamp','trade_day':'string','open':'double',
+                    'high':'double','low':'double','close':'double','volume':'bigint',
+                    'turnover':'double','vwap':'double'},
+        table_type='timelyre',
+        tags='code',timecol='datetime',
+        shard_group_duration=63072000,
+        time_sharding_policy='years')
+        #创建事务表
+        db.create_table(
+        table_name='orc_test',
+        table_type='orc',
+        column_info={'field':'string',
+                        'data_type':'string',
+                        'explain':'string'},
+        bucketcolumn='field',
+        bucketquantity=1)
+        #创建文本表
+        db.create_table(
+        table_name='text_test',
+        column_info={'field':'string',
+                        'data_type':'string',
+                        'explain':'string'},
+        table_type='text',
+        is_external=True,
+        col_delimiter=',',
+        isExternal=True,
+        location='/tmp')
 ```
 - delete_table 删除数据表
     - 参数:
@@ -94,65 +141,32 @@
 - 代码样例
 ```
     In:
-    db.delete('stock_data')
+    db.delete_table('db_test')
 ```
----
-```
-    Out:
-```
-- insert_value 插入数据
+- truncate_table 清空数据表内容(只用于orc事务表)
     - 参数:
-        >名称|类型|说明
-        >----|----|----
         table_name|String|数据表名
-        value|String/tuple/list|待插入数据
 - 代码样例
 ```
     In:
-    db.insert_value('stock_data',('2021-01-01 09:01:00',100.1,80.1,90.1,95.1,'002140.SH'))
-```
----
-```
-    Out:
+    db.truncate_table('orc_test')
 ```
 - insert_values 批量插入数据
     - 参数:
       >名称|类型|说明
       >----|----|----
       table_name|String|数据表名
-      values|List/tuple/dataframe|插入数据
-- 代码样例
-```
-    In:
-    data = [['2021-01-01 09:02:00',110.1,85.2,93.1,96.4,'002140.SH'],
-            ['2021-01-01 09:03:00',109.4,89.3,94,99.2,'002140.SH']]
-    db.insert_values('stock_data', data)
-```
-- insert_df 插入dataframe数据
-    - 参数
-      >名称|类型|说明
-      >----|----|----
-      table_name|String|数据表名
-      df|dataframe|插入数据,dataframe格式
+      values|List/tuple/dict/pandas.DataFrame|插入数据
+      if_file|Bool|是否以文件形式传输
+      col_delimiter|String|以文件传输时,列分隔符,默认为','
+      batch|Integer|传输批次大小,默认500
+      parallelism|Integer|并行数,默认1
 - 代码样例
 ```
     In:
     import pandas as pd
     data = pd.DataFrame(data, columns=['datetime','high','low','open','close','code'])
-    db.insert_df('stock_data', data)
-```
-- load_csv 导入csv文件到数据表
-    - 参数
-      >名称|类型|说明
-      >----|----|----
-      table_name|String|数据表名
-      path|String|csv文件路径
-      skip_head|bool|是否删除表头
-- 代码样例
-```
-    In:
-    path = '/root/test.csv'
-    db.load_csv('stock_data', path)
+    db.insert_values('stock_data', data)
 ```
 - query 查询数据表
     - 参数
@@ -163,22 +177,105 @@
       start|String/date/datetime|查询起始时间
       end|String/date/datetime|查询截止时间
       universe|String/List|查询代码
+      other_condition|Dict|其他筛选条件,{<字段>:<条件>}<br>条件可以为单值,tuple,list<br>分别表示取单值,取值范围(闭区间),取多值
+      size|Integer|返回记录条数
 - 代码样例
 ```
     In:
-    df = db.query('stock__meta',start='2022-08-01',end='2022-08-04',fields='insdustry2,market',universe='000004.SZSE,000065.SZSE')
+    df = db.query('stock_bar_daily',start='2019-10-01',end='2019-10-15',fields='close,vwap',universe='000004.SZ,000065.SZ')
     print(df)
 ```
 ---
 ```
     Out:
-            insdustry2 market         code            datetime
-    0       软件服务    深主板  000004.SZSE 2022-08-01 15:00:00
-    1       软件服务    深主板  000004.SZSE 2022-08-02 15:00:00
-    2       软件服务    深主板  000004.SZSE 2022-08-03 15:00:00
-    3       建筑工程    深主板  000065.SZSE 2022-08-01 15:00:00
-    4       建筑工程    深主板  000065.SZSE 2022-08-02 15:00:00
-    5       建筑工程    深主板  000065.SZSE 2022-08-03 15:00:00
+        close    vwap       code            datetime
+    0   18.83  18.900  000004.SZ 2019-10-08 15:00:00
+    1   18.73  18.692  000004.SZ 2019-10-09 15:00:00
+    2   18.94  18.881  000004.SZ 2019-10-10 15:00:00
+    3   18.87  18.834  000004.SZ 2019-10-11 15:00:00
+    4   19.05  19.041  000004.SZ 2019-10-14 15:00:00
+    5   18.84  18.864  000004.SZ 2019-10-15 15:00:00
+    6    8.53   8.566  000065.SZ 2019-10-08 15:00:00
+    7    8.60   8.513  000065.SZ 2019-10-09 15:00:00
+    8    8.64   8.639  000065.SZ 2019-10-10 15:00:00
+    9    8.61   8.576  000065.SZ 2019-10-11 15:00:00
+    10   8.78   8.787  000065.SZ 2019-10-14 15:00:00
+    11   8.66   8.691  000065.SZ 2019-10-15 15:00:00
+```
+---
+```
+    In:
+    #指定其他查询条件,收盘价在18和19之间
+    df = db.query('stock_bar_daily',start='2019-10-01',end='2019-10-15',fields='close,vwap',universe='000004.SZ,000065.SZ',
+    other_condition={'close':(18,19)})
+```
+---
+```
+    Out:
+       close    vwap       code            datetime
+    0  18.83  18.900  000004.SZ 2019-10-08 15:00:00
+    1  18.73  18.692  000004.SZ 2019-10-09 15:00:00
+    2  18.94  18.881  000004.SZ 2019-10-10 15:00:00
+    3  18.87  18.834  000004.SZ 2019-10-11 15:00:00
+    4  18.84  18.864  000004.SZ 2019-10-15 15:00:00
+```
+---
+```
+    In:
+    #指定其他查询条件,收盘价取18.83,8.66,8.64,8.61
+    df = db.query('stock_bar_daily',start='2019-10-01',end='2019-10-15',fields='close,vwap',universe='000004.SZ,000065.SZ',
+    other_condition={'close':[18.83,8.66,8.64,8.61]})
+```
+---
+```
+    Out:
+       close    vwap       code            datetime
+    0  18.83  18.900  000004.SZ 2019-10-08 15:00:00
+    1   8.64   8.639  000065.SZ 2019-10-10 15:00:00
+    2   8.61   8.576  000065.SZ 2019-10-11 15:00:00
+    3   8.66   8.691  000065.SZ 2019-10-15 15:00:00
+```
+---
+```
+    In:
+    #指定其他查询条件,收盘价等于8.60
+    df = db.query('stock_bar_daily',start='2019-10-01',end='2019-10-15',fields='close,vwap',universe='000004.SZ,000065.SZ',
+    other_condition={'close':8.60})
+```
+---
+```
+    Out:
+       close   vwap       code            datetime
+    0    8.6  8.513  000065.SZ 2019-10-09 15:00:00
+```
+- query_raw 普通查询
+    - 参数
+    >名称|类型|说明
+    table_name|String|查询表名
+    fields|List/String|查询字段
+    condition|Dict|查询条件,{<字段>:<条件>},方式同query方法
+- 代码样例
+```
+    In:
+    db.query_raw('stock_code',fields='code,name,industry,list_date',condition={'industry':['软件服务','银行']})
+```
+---
+```
+    Out:
+              code  name industry   list_date
+    0    000001.SZ  平安银行       银行  1991-04-03
+    1    000004.SZ  ST国华     软件服务  1991-01-14
+    2    000034.SZ  神州数码     软件服务  1994-05-09
+    3    000158.SZ  常山北明     软件服务  2000-07-24
+    4    000409.SZ  云鼎科技     软件服务  1996-06-27
+    ..         ...   ...      ...         ...
+    310  688590.SH  新致软件     软件服务  2020-12-07
+    311  688619.SH   罗普特     软件服务  2021-02-23
+    312  688682.SH   霍莱沃     软件服务  2021-04-20
+    313  688777.SH  中控技术     软件服务  2020-11-24
+    314  688787.SH  海天瑞声     软件服务  2021-08-13
+
+[315 rows x 4 columns]
 ```
 - query_calendar 查询交易日
     - 参数
@@ -202,6 +299,31 @@
     datetime.date(2022, 9, 9), datetime.date(2022, 9, 13), datetime.date(2022, 9, 14),
     datetime.date(2022, 9, 15), datetime.date(2022, 9, 16), datetime.date(2022, 9, 19),
     datetime.date(2022, 9, 20)]
+```
+- delete_row 删除记录(只用于orc事务表)
+    - 参数
+    >名称|类型|说明
+    >----|----|----
+    table_name|String|数据表名
+    condition|Dict|删除条件
+- 代码样例
+```
+    In:
+    #删除field为turnover的记录
+    db.delete_row('orc_test', condition={'field':'turnover'})
+```
+- update_row 修改记录(只用于orc事务表)
+    - 参数
+    >名称|类型|说明
+    >----|----|----
+    table_name|String|数据表名
+    column_map|Dict|{<字段>|<更新值>}
+    condition|Dict|{<字段>|<条件>}
+- 代码样例
+```
+    In:
+    #查询field字段等于code的记录,并将其data_type字段修改为test
+    update_row('orc_test',column_map={'data_type':'test'},condition={'field':'code'})
 ```
 ## 数据api
 
