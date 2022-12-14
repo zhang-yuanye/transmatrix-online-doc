@@ -7,16 +7,65 @@
   <meta name="description" content="Description">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+<!--  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/themes/dark.css" />-->
+  <link rel="stylesheet" href="https://cdn.9xing.cn/docsify-sidebar-collapse/1.3.5/sidebar-folder-mine.min.css" />
 </head>
 <body>
   <div id="app"></div>
   <script>
     window.$docsify = {
-      name: '',
-      repo: ''
+      name: 'Transmatrix 使用手册',
+      repo: 'http://gitlab.transwarp.io/yuanye.zhang/transmatrix-cluster-dev',
+      //封面
+      coverpage:true,
+      //左侧目录
+      loadSidebar: true,
+      // onlyCover: true,
+      subMaxLevel: 2,
+      alias: {
+        "/.*/_sidebar.md": "/_sidebar.md",
+      },
+      // 跳转后自动到顶部
+      auto2top: true,
+      toc: {
+          tocMaxLevel: 2,
+          target: "h2, h3, h4, h5, h6",
+        },
+      //搜索栏
+      search:{
+        maxAge:3600000,
+        paths:'auto',
+        placeholder:{'/zh-ch':'搜索',
+        '/':'搜索'},
+        depth:4,
+        noData:'找不到结果',
+        sidebarDisplayLevel:1,
+      },
+      // logo: 'Logo.jpg',
+      loadNavbar: true,
+      // homepage: 'home.md'
+      // 底部导航
+      // pagination: {
+      //   previousText: "上一页",
+      //   nextText: "下一页",
+      //   crossChapter: true,
+      //   crossChapterText: true,
+      // },
+
     }
   </script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-python.min.js"></script>
+<!--  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>-->
+<!--  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-php.min.js"></script>-->
+  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
+  <!--  搜索高亮-->
+  <script src="vendor/plugins/hightlight.js"></script>
+  <script src="https://cdn.9xing.cn/docsify-sidebar-collapse/1.3.5/docsify-sidebar-collapse.js"></script>
+  <!-- 图片放大缩小 -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
+
 </body>
 </html>
