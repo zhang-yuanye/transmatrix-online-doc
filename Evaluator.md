@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import multiprocessing as mp
 ```
 
-### 如何调用因子评价与展示这一模块   
+## 调用模块及其相关函数   
 ```python
 class Eval(BaseEvaluator):  #这块后续再改，不太知道那个咋调用的
 ```
@@ -30,7 +30,7 @@ def critic(self, critic_data):  #获取因子数据
 ```
 
 ### _process_500 - 构建与基准组合中证500
-#### 输出DataFrame内容
+### 输出DataFrame内容
 
 >| 名称       | 含义                 |
 >|----------|--------------------|
@@ -60,7 +60,7 @@ def _process_500(self, critic_data):
 ```
 
 ### _process_ind - 构建行业样本并返回样本投资数据
-#### 输出DataFrame内容
+### 输出DataFrame内容
 
 >| 名称       |含义|
 >|----------|---|
@@ -163,8 +163,10 @@ def _process_base(self, critic_data):
     return perf
 ```
 
-### show - 因子展示函数
-#### 输出内容
+## 因子展示函数及模板介绍
+- 因子结果评价展示模块目前有4个模板（template）可供选择，不同模板都是以show()函数对结果进行输出，对于不同模板的输出结果介绍如下：
+
+### templateA
 >| 名称         | 含义         |
 >|------------|------------|
 | TopRetTol  | Top组的累积收益率 |
@@ -185,42 +187,80 @@ def _process_base(self, critic_data):
   ![](TopNavHistory.jpg)
   * LongShort组的历史收益率及回撤情况
   ![](LSNavHistory.jpg)
-```python
-def show(self):
-    perf = self.perf
-    print('-'*100)
-    print('stats')  #关于目标因子组合的各类数据，包括Top组，多空组IC等等
-    print(perf['stats'])
-    print('-'*100)
-    print('history')   #时序上的各项数据，包括
-    print(perf['history'])
-    print('-'*100)
 
-    n = 4
-    _, axs = plt.subplots(n,1, figsize = (8,4*n))
-    perf['qret']['tot'].plot(kind = 'bar', title = 'QuantRetTot', ax = axs[0])
-    perf['qret']['history'].plot(title = 'QuantRetHistory', ax = axs[1])
-
-    axt = axs[2].twinx()
-    ser = perf['history']['top_dd_ser']
-    axt.fill_between(ser.index, 0, ser.values, color = 'r', alpha = 0.1)
-
-    perf['history']['top_nav_ser'].plot(title = 'TopNavHistory', ax = axs[2])
-    axs[2].legend(['Nav'])
-    axt.legend(['Mdd(right)'])
-
-    axt = axs[3].twinx()
-    ser = perf['history']['ls_dd_ser']
-    axt.fill_between(ser.index, 0, ser.values, color = 'r', alpha = 0.1)
-    perf['history']['ls_nav_ser'].plot(title = 'LSNavHistory', ax = axs[3], legend = 'NAV')
-    axs[3].legend(['Nav'])
-    axt.legend(['Mdd(right)'])
-
-    for ax in axs: ax.grid(alpha = 0.3)
-    plt.tight_layout()
-    plt.show()
-
-    print(self.perf['industryIC'])
-```
+  - 该模板show()函数代码展示：
+  ```python
+  def show(self):
+      perf = self.perf
+      print('-'*100)
+      print('stats')  #关于目标因子组合的各类数据，包括Top组，多空组IC等等
+      print(perf['stats'])
+      print('-'*100)
+      print('history')   #时序上的各项数据，包括
+      print(perf['history'])
+      print('-'*100)
   
+      n = 4
+      _, axs = plt.subplots(n,1, figsize = (8,4*n))
+      perf['qret']['tot'].plot(kind = 'bar', title = 'QuantRetTot', ax = axs[0])
+      perf['qret']['history'].plot(title = 'QuantRetHistory', ax = axs[1])
+  
+      axt = axs[2].twinx()
+      ser = perf['history']['top_dd_ser']
+      axt.fill_between(ser.index, 0, ser.values, color = 'r', alpha = 0.1)
+  
+      perf['history']['top_nav_ser'].plot(title = 'TopNavHistory', ax = axs[2])
+      axs[2].legend(['Nav'])
+      axt.legend(['Mdd(right)'])
+  
+      axt = axs[3].twinx()
+      ser = perf['history']['ls_dd_ser']
+      axt.fill_between(ser.index, 0, ser.values, color = 'r', alpha = 0.1)
+      perf['history']['ls_nav_ser'].plot(title = 'LSNavHistory', ax = axs[3], legend = 'NAV')
+      axs[3].legend(['Nav'])
+      axt.legend(['Mdd(right)'])
+  
+      for ax in axs: ax.grid(alpha = 0.3)
+      plt.tight_layout()
+      plt.show()
+  
+      print(self.perf['industryIC'])
+  ```
 
+### templateB
+- 考虑交易成本和整手交易限制
+
+```python
+eval.show()
+```  
+- 输出结果及图例
+<div align=center>
+<img  src="report2.png"/>
+</div>
+<div align=center>ic分析和收益分析结果展示2</div>
+
+### templateC
+- 因子加权组合分析
+```python
+eval.show()
+```
+- 输出结果及图例
+<div align=center>
+<img src="report3.png"/>
+</div>
+<div align=center>因子加权组合分析结果展示</div>
+
+### templateD
+- 输出结果
+```
+                      IC_Mean    IC_Std      ICIR  RKIC_Mean  RKIC_Std    RKICIR
+2019-12-31 00:00:00  0.017947  0.098816  0.181621   0.034889  0.111846  0.311935
+2020-12-31 00:00:00  0.006540  0.126423  0.051733   0.032513  0.136405  0.238352
+2021-12-31 00:00:00  0.007475  0.113170  0.066055   0.027007  0.129344  0.208796
+All                  0.010677  0.113309  0.094232   0.031486  0.126130  0.249634
+```
+- 输出图例
+<div align=center>
+<img src="report4.png"/>
+</div>
+<div align=center>ic分析和收益分析结果展示3</div>

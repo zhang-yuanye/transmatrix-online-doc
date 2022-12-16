@@ -1,5 +1,4 @@
-# TransMatrix配置文件说明
-## yaml文件基本说明
+# yaml文件基本说明
 
 - 用户可以在编程环境中以一个config.yaml作为入口进行一次回测研究  
 命令行调用  :  Matrix -p CONFIG_PATH  
@@ -37,7 +36,7 @@ matrix:
     # 用户自定义的交易票池
     # e.g. 此处引用了同级别目录下的 xxx.pkl文件
     # 用户可以自行定义交易票池,以列表 列表、字符串或文件的形式传入
-    universe: &universe custom_universe.pkl  
+    universe: &universe custom_universe.pkl.pkl  
 
     
     # 触发因子计算逻辑的时间 [signal模式特有] 
@@ -180,5 +179,34 @@ analyzer:
                 # - close2close,vwap2vwap
                 # - 0
         # benchmark: ['000300.SH']
+```
+
+## 运行函数
+### 运行实例
+```python
+from transmatrix.workflow.run_yaml import run_matrix
+#运行回测函数，读取配置文件
+mat = run_matrix('project_signal/config.md')
+from transmatrix.data_api import PanelDataBase
+# 创建PanelDataBase
+db = PanelDataBase()
+```
+
+```python
+mat.strategies
+```
+```
+Out:
+{'ReverseSignal': <strategy.ReverseSignal at 0x7fe24158d340>}
+```
+```python
+mat.evaluators
+```
+```
+Out:
+{'SimpleAlphaEval': <evaluator.Eval at 0x7fe1e0190ac0>}
+```
+```python
+mat.evaluators['SimpleAlphaEval'].show()
 ```
 
